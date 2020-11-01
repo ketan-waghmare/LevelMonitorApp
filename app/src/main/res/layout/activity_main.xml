@@ -13,6 +13,7 @@
         android:orientation="vertical">
 
         <TextView
+            android:id="@+id/tv_received_data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Received Data"
@@ -21,7 +22,6 @@
             android:gravity="center"/>
 
         <TextView
-            android:id="@+id/tv_received_data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -45,6 +45,7 @@
             app:wlv_titleCenterColor="@android:color/white"
             app:wlv_titleCenterSize="24sp"
             app:wlv_waveAmplitude="70"
+
             app:wlv_waveColor="@color/colorAccent"/>
 
     </LinearLayout>

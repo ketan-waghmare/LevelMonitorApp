@@ -85,15 +85,17 @@ public class MainActivity extends AppCompatActivity {
 
     private int shadowColor;
     private float blur, distX, distY;
-    WaveLoadingView mWaveLoadingView;
+    private WaveLoadingView mWaveLoadingView;
 
-    private TextView tvReceivedData;
+    private double value;
+    private double percent;
+    private MediaPlayer mp;
     PercentageChartView mChart;
+    private TextView tvReceivedData;
     private ProgressDialog progressDialog;
+    private boolean isAudioPlaying = false;
     private Context context = MainActivity.this;
     private SharedPreferences sharedPreferenceBluetoothAddress;
-    private MediaPlayer mp;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         setupUI();
-        startLeveLIndicator();
         initPreference();
         initializeData();
         setLayout();
@@ -126,13 +127,13 @@ public class MainActivity extends AppCompatActivity {
         mWaveLoadingView.startAnimation();
     }
 
-    private void setLayout() { }
+    private void setLayout() {
+    }
 
     private void setupUI() {
-//        mChart = findViewById(R.id.chart);
         tvReceivedData = findViewById(R.id.tv_received_data);
         mWaveLoadingView = (WaveLoadingView) findViewById(R.id.waveLoadingView);
-        mp = MediaPlayer.create(context,R.raw.siran);
+        mp = MediaPlayer.create(context, R.raw.siran);
 
     }
 
@@ -142,7 +143,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeData() {
         try {
-
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             @SuppressLint("MissingPermission")
             Set<BluetoothDevice> bluetoothDevices = bluetoothAdapter.getBondedDevices();
@@ -216,43 +216,46 @@ public class MainActivity extends AppCompatActivity {
             try {
                 str = params[0];
 
+                value = Double.parseDouble(str);
+
+                percent = mapValues(value);
+
+                int roundUp = (int) percent;
+
                 Log.e("str_Log_First", ":" + str);
-                if (str.contains("Please Remove saline") || str.contains("Remove") || str.contains("Remo") || str.contains("sali")){
-                    tvReceivedData.setText("Please Remove saline");
-                    tvReceivedData.setBackground(getResources().getDrawable(R.drawable.round_btn_small));
+
+                mWaveLoadingView.setTopTitle("value  " + str);
+
+                if(Double.parseDouble(str) < 0.005){
+                    stopPlaying();
+                    tvReceivedData.setText("No Saline");
+                    tvReceivedData.setTextSize(25);
                     mWaveLoadingView.setProgressValue(0);
-                    mWaveLoadingView.setTopTitle("Value = 0");
-                    mWaveLoadingView.setAnimDuration(0);
+                    mWaveLoadingView.setTopTitle("Value = "+str);
+                    mWaveLoadingView.setAnimDuration(3000);
+                    mWaveLoadingView.setWaveColor(Color.RED);
+                    mWaveLoadingView.startAnimation();
+                }else if (Double.parseDouble(str) <= 0.050 && Double.parseDouble(str) > 0.005) {
+                    tvReceivedData.setText("Please Remove saline");
+                    tvReceivedData.setTextSize(25);
+                    tvReceivedData.setBackground(getResources().getDrawable(R.drawable.round_btn_small));
+                    mWaveLoadingView.setProgressValue(roundUp);
+                    mWaveLoadingView.setTopTitle("Value = "+str);
+                    mWaveLoadingView.setAnimDuration(3000);
                     mWaveLoadingView.setWaveColor(Color.RED);
                     mWaveLoadingView.startAnimation();
                     playsound();
-                }else{
-                    if(Double.parseDouble(str.substring(0,4)) > 0.1 && Double.parseDouble(str.substring(0,4)) < 0.5){
-                        mWaveLoadingView.setProgressValue(25);
-                        mWaveLoadingView.setTopTitle("value  = "+str.substring(0,4));
-                        mWaveLoadingView.setAnimDuration(200);
-                        mWaveLoadingView.setWaveColor(Color.RED);
-                        mWaveLoadingView.startAnimation();
-                        playsound();
-                    }else if(Double.parseDouble(str.substring(0,4)) > 0.5 && Double.parseDouble(str.substring(0,4)) < 1){
-                        mWaveLoadingView.setProgressValue(50);
-                        mWaveLoadingView.setTopTitle("value  = "+str.substring(0,4));
-                        mWaveLoadingView.setAnimDuration(200);
-                        mWaveLoadingView.setWaveColor(Color.GREEN);
-                        mWaveLoadingView.startAnimation();
-                    }else if(Double.parseDouble(str.substring(0,4)) > 1 && Double.parseDouble(str.substring(0,4)) < 1.5){
-                        mWaveLoadingView.setProgressValue(75);
-                        mWaveLoadingView.setTopTitle("value  "+str.substring(0,4));
-                        mWaveLoadingView.setAnimDuration(200);
-                        mWaveLoadingView.setWaveColor(Color.GREEN);
-                        mWaveLoadingView.startAnimation();
-                    }else if(Double.parseDouble(str.substring(0,4)) > 1.5 && Double.parseDouble(str.substring(0,4)) < 2){
-                        mWaveLoadingView.setProgressValue(100);
-                        mWaveLoadingView.setTopTitle("value  "+str.substring(0,4));
-                        mWaveLoadingView.setAnimDuration(200);
-                        mWaveLoadingView.setWaveColor(Color.GREEN);
-                        mWaveLoadingView.startAnimation();
-                    }
+                } else if((Double.parseDouble(str) > 0.050)){
+                    stopPlaying();
+                    tvReceivedData.setText("Saline is ON");
+                    tvReceivedData.setTextSize(25);
+                    mWaveLoadingView.setProgressValue(roundUp);
+                    mWaveLoadingView.setTopTitle("Value = "+str);
+                    mWaveLoadingView.setAnimDuration(3000);
+                    mWaveLoadingView.setWaveColor(Color.GREEN);
+                    mWaveLoadingView.startAnimation();
+                } else if(Double.parseDouble(str) < 0.005){
+
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -278,14 +281,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    private Double mapValues(Double v1){
+        double value = (v1 * 100) / (1.000);
+        Log.e("mapValue_log"," = "+String.valueOf(value));
+        return value;
+    }
+
+    private void stopPlaying() {
+        if (mp != null) {
+            mp.stop();
+
+            mp.reset();
+            mp.release();
+            mp = null;
+        }
+    }
+
     private void playsound() {
-        try {
-            if (mp.isPlaying()) {
-                mp.stop();
-                mp.release();
+        if (!isAudioPlaying) {
+            try {
+                stopPlaying();
                 mp = MediaPlayer.create(context, R.raw.siran);
-            } mp.start();
-        } catch(Exception e) { e.printStackTrace(); }
+                mp.start();
+                isAudioPlaying = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            isAudioPlaying = false;
+            Toast.makeText(context, "Audio", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
@@ -331,7 +357,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void onPostExecute(String result) {
-            if(progressDialog.isShowing())
+            if (progressDialog.isShowing())
                 progressDialog.dismiss();
 
             Toast.makeText(MainActivity.this, result, Toast.LENGTH_SHORT).show();
