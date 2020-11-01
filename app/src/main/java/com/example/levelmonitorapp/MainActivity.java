@@ -232,13 +232,11 @@ public class MainActivity extends AppCompatActivity {
                     tvReceivedData.setTextSize(25);
                     mWaveLoadingView.setProgressValue(0);
                     mWaveLoadingView.setTopTitle("Value = "+str);
-                    mWaveLoadingView.setAnimDuration(3000);
                     mWaveLoadingView.setWaveColor(Color.RED);
-                    mWaveLoadingView.startAnimation();
+                    mWaveLoadingView.pauseAnimation();
                 }else if (Double.parseDouble(str) <= 0.050 && Double.parseDouble(str) > 0.005) {
                     tvReceivedData.setText("Please Remove saline");
                     tvReceivedData.setTextSize(25);
-                    tvReceivedData.setBackground(getResources().getDrawable(R.drawable.round_btn_small));
                     mWaveLoadingView.setProgressValue(roundUp);
                     mWaveLoadingView.setTopTitle("Value = "+str);
                     mWaveLoadingView.setAnimDuration(3000);
@@ -254,8 +252,6 @@ public class MainActivity extends AppCompatActivity {
                     mWaveLoadingView.setAnimDuration(3000);
                     mWaveLoadingView.setWaveColor(Color.GREEN);
                     mWaveLoadingView.startAnimation();
-                } else if(Double.parseDouble(str) < 0.005){
-
                 }
             } catch (Exception e) {
                 e.printStackTrace();
